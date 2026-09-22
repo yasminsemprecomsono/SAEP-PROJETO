@@ -66,4 +66,17 @@ public class ProdutoController {
         produtoService.deletar(id);
         return "redirect:/cadastro-produto";
     }
+    @GetMapping("/gestao-estoque")
+    public String gestaoEstoque(
+            HttpSession session,
+            Model model) {
+
+        if (session.getAttribute("usuarioLogado") == null) {
+            return "redirect:/login";
+        }
+
+        model.addAttribute("produtos", produtoService.listarTodos());
+
+        return "gestao-estoque";
+    }
 }

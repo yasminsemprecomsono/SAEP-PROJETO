@@ -36,4 +36,7 @@ public class ProdutoService {
     public void deletar(Long id) {
         produtoRepository.deleteById(id);
     }
+    public List<ProdutoEntity> listarTodos() {
+        return produtoRepository.findAll();
+    }
 }

@@ -22,6 +22,8 @@ public class ProdutoEntity {
     @Min(value = 0, message = "Quantidade inválida")
     private Integer quantidade;
 
+    private int estoqueMinimo;
+
     public ProdutoEntity() {}
 
     public Long getId() { return id; }
@@ -35,4 +37,11 @@ public class ProdutoEntity {
 
     public Integer getQuantidade() { return quantidade; }
     public void setQuantidade(Integer quantidade) { this.quantidade = quantidade; }
+
+    public int getEstoqueMinimo() {
+        return estoqueMinimo;
+    }
+    public void setEstoqueMinimo(int estoqueMinimo) {
+        this.estoqueMinimo = estoqueMinimo;
+    }
 }

@@ -378,6 +378,41 @@
         }
 
         /* =========================
+           ORDENAÇÃO
+        ========================= */
+
+        .ordenacao {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .ordenacao form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .ordenacao select {
+            padding: 11px 15px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
+            outline: none;
+        }
+
+        .btn-ordenar {
+            padding: 11px 18px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #7c3aed, #2563eb);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* =========================
            RESPONSIVIDADE
         ========================= */
 
@@ -672,12 +707,33 @@
                 Produtos em estoque
             </h2>
 
-            <input
-                    type="text"
-                    id="buscarProduto"
-                    class="busca"
-                    placeholder="Pesquisar produto..."
-                    onkeyup="filtrarProdutos()">
+            <div class="ordenacao">
+
+                <form th:action="@{/gestao-estoque}" method="get">
+
+                    <select name="ordenar">
+                        <option value="nome" th:selected="${ordenar == 'nome'}">Nome</option>
+                        <option value="preco" th:selected="${ordenar == 'preco'}">Preço</option>
+                        <option value="quantidade" th:selected="${ordenar == 'quantidade'}">Quantidade</option>
+                    </select>
+
+                    <select name="direcao">
+                        <option value="asc" th:selected="${direcao == 'asc'}">Crescente</option>
+                        <option value="desc" th:selected="${direcao == 'desc'}">Decrescente</option>
+                    </select>
+
+                    <button type="submit" class="btn-ordenar">Ordenar</button>
+
+                </form>
+
+                <input
+                        type="text"
+                        id="buscarProduto"
+                        class="busca"
+                        placeholder="Pesquisar produto..."
+                        onkeyup="filtrarProdutos()">
+
+            </div>
 
         </div>
 
@@ -819,6 +875,8 @@
 
                 <th>Quantidade</th>
 
+                <th>Estoque (antes → depois)</th>
+
                 <th>Data</th>
 
                 <th>Usuário</th>
@@ -870,6 +928,17 @@
                 </td>
 
 
+                <!-- ESTOQUE ANTES -> DEPOIS (rastreabilidade) -->
+
+                <td>
+                    <span th:if="${movimentacao.quantidadeAnterior != null}"
+                          th:text="${movimentacao.quantidadeAnterior + ' → ' + movimentacao.quantidadeAtual}">
+                        0 → 0
+                    </span>
+                    <span th:if="${movimentacao.quantidadeAnterior == null}">-</span>
+                </td>
+
+
                 <!-- DATA -->
 
                 <td
@@ -898,7 +967,7 @@
                     th:if="${movimentacoes == null or movimentacoes.isEmpty()}">
 
                 <td
-                        colspan="5"
+                        colspan="6"
                         style="text-align:center; color:#94a3b8;">
 
                     Nenhuma movimentação registrada.

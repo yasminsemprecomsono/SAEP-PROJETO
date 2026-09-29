@@ -57,10 +57,4 @@ public class UsuarioController {
         session.invalidate();
         return "redirect:/login";
     }
-
-    @GetMapping("/gestao-estoque")
-    public String gestaoEstoque(HttpSession session) {
-        if (session.getAttribute("usuarioLogado") == null) return "redirect:/login";
-        return "gestao-estoque";
-    }
 }

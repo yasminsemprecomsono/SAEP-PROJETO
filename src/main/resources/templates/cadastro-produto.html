@@ -1204,7 +1204,7 @@
             <div class="row g-3">
 
 
-                <div class="col-md-6">
+                <div class="col-md-4">
 
                     <label class="form-label">
                         Nome do produto
@@ -1219,7 +1219,7 @@
                 </div>
 
 
-                <div class="col-md-3">
+                <div class="col-md-2">
 
                     <label class="form-label">
                         Preço
@@ -1245,6 +1245,22 @@
                     <input type="number"
                            class="form-control"
                            th:field="*{quantidade}"
+                           placeholder="0"
+                           min="0"
+                           required>
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Estoque mínimo
+                    </label>
+
+                    <input type="number"
+                           class="form-control"
+                           th:field="*{estoqueMinimo}"
                            placeholder="0"
                            min="0"
                            required>
@@ -1329,6 +1345,10 @@
                     </th>
 
                     <th>
+                        Mínimo
+                    </th>
+
+                    <th>
                         Ações
                     </th>
 
@@ -1367,6 +1387,11 @@
 
                         0
 
+                    </td>
+
+
+                    <td th:text="${p.estoqueMinimo}">
+                        0
                     </td>
 
 
@@ -1472,7 +1497,7 @@
 
                 <tr th:if="${#lists.isEmpty(produtos)}">
 
-                    <td colspan="5"
+                    <td colspan="6"
                         class="empty">
 
                         📦
@@ -1553,4 +1578,3 @@
 </body>
 
 </html>
-

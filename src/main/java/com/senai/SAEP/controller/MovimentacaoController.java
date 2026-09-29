@@ -38,7 +38,7 @@ public class MovimentacaoController {
 
         try {
 
-            movimentacaoService.registrarMovimentacao(
+            String alerta = movimentacaoService.registrarMovimentacao(
                     produtoId,
                     tipo,
                     quantidade,
@@ -49,6 +49,11 @@ public class MovimentacaoController {
                     "sucesso",
                     "Movimentação registrada com sucesso."
             );
+
+            // Alerta de estoque mínimo (aula 9)
+            if (alerta != null) {
+                redirectAttributes.addFlashAttribute("aviso", alerta);
+            }
 
         } catch (IllegalArgumentException e) {
 

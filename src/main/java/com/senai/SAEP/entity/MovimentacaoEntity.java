@@ -25,6 +25,12 @@ public class MovimentacaoEntity {
     @Column(nullable = false)
     private LocalDateTime data;
 
+    // Rastreabilidade: estoque do produto antes e depois da movimentação
+    // (Integer, pois registros antigos não possuem esses valores)
+    private Integer quantidadeAnterior;
+
+    private Integer quantidadeAtual;
+
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)
     private UsuarioEntity usuario;
@@ -64,6 +70,22 @@ public class MovimentacaoEntity {
 
     public void setData(LocalDateTime data) {
         this.data = data;
+    }
+
+    public Integer getQuantidadeAnterior() {
+        return quantidadeAnterior;
+    }
+
+    public void setQuantidadeAnterior(Integer quantidadeAnterior) {
+        this.quantidadeAnterior = quantidadeAnterior;
+    }
+
+    public Integer getQuantidadeAtual() {
+        return quantidadeAtual;
+    }
+
+    public void setQuantidadeAtual(Integer quantidadeAtual) {
+        this.quantidadeAtual = quantidadeAtual;
     }
 
     public UsuarioEntity getUsuario() {

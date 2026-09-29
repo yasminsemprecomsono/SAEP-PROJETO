@@ -7,6 +7,7 @@ import com.senai.SAEP.repository.MovimentacaoRepository;
 import com.senai.SAEP.repository.ProdutoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,109 +22,112 @@ public class MovimentacaoService {
     private ProdutoRepository produtoRepository;
 
 
-    // Lista todas as movimentações
+    // Lista todas as movimentações (mais recentes primeiro)
     public List<MovimentacaoEntity> listarTodas() {
         return movimentacaoRepository.findAllByOrderByDataDesc();
     }
 
 
-    // Registra uma entrada ou saída de estoque
-    public void registrarMovimentacao(
+    /**
+     * Registra uma entrada ou saída de estoque.
+     *
+     * @Transactional: atualizar o produto e gravar a movimentação acontecem
+     * juntos. Se algo falhar no meio, nada é gravado (evita estoque alterado
+     * sem histórico).
+     *
+     * @return mensagem de alerta se, após a movimentação, o produto ficou
+     *         com estoque no mínimo (ou abaixo); caso contrário, null.
+     */
+    @Transactional
+    public String registrarMovimentacao(
             Long produtoId,
             String tipo,
             Integer quantidade,
             UsuarioEntity usuario) {
 
-        // REGRA 1:
-        // A quantidade deve ser maior que zero
-
+        // REGRA 1: a quantidade deve ser maior que zero
         if (quantidade == null || quantidade <= 0) {
             throw new IllegalArgumentException(
                     "A quantidade deve ser maior que zero."
             );
         }
 
-
-        // REGRA 2:
-        // O produto precisa existir
-
+        // REGRA 2: o produto precisa existir
         ProdutoEntity produto = produtoRepository
                 .findById(produtoId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Produto não encontrado."
-                        )
+                        new IllegalArgumentException("Produto não encontrado.")
                 );
 
+        // REGRA 3: o tipo deve ser ENTRADA ou SAIDA
+        if (tipo == null) {
+            throw new IllegalArgumentException("Tipo de movimentação inválido.");
+        }
 
-        // REGRA 3:
-        // O tipo deve ser ENTRADA ou SAIDA
+        tipo = tipo.trim().toUpperCase();
 
         if (!tipo.equals("ENTRADA") && !tipo.equals("SAIDA")) {
-
-            throw new IllegalArgumentException(
-                    "Tipo de movimentação inválido."
-            );
+            throw new IllegalArgumentException("Tipo de movimentação inválido.");
         }
 
+        // Guarda o estoque ANTES da movimentação (rastreabilidade)
+        int quantidadeAnterior = produto.getQuantidade();
 
-        // REGRA 4:
-        // ENTRADA aumenta a quantidade
-
+        // REGRA 4: ENTRADA aumenta a quantidade
         if (tipo.equals("ENTRADA")) {
-
-            produto.setQuantidade(
-                    produto.getQuantidade() + quantidade
-            );
+            produto.setQuantidade(quantidadeAnterior + quantidade);
         }
 
-
-        // REGRA 5:
-        // SAIDA diminui a quantidade
-
+        // REGRA 5: SAIDA diminui a quantidade (sem permitir estoque negativo)
         if (tipo.equals("SAIDA")) {
 
-            // Não permite estoque negativo
-
-            if (quantidade > produto.getQuantidade()) {
-
+            if (quantidade > quantidadeAnterior) {
                 throw new IllegalArgumentException(
                         "Não é possível realizar a saída. " +
                                 "A quantidade solicitada é maior que o estoque disponível."
                 );
             }
 
-            produto.setQuantidade(
-                    produto.getQuantidade() - quantidade
-            );
+            produto.setQuantidade(quantidadeAnterior - quantidade);
         }
 
+        int quantidadeAtual = produto.getQuantidade();
 
         // Atualiza o produto no banco
-
         produtoRepository.save(produto);
 
-
         // Cria o registro da movimentação
-
-        MovimentacaoEntity movimentacao =
-                new MovimentacaoEntity();
+        MovimentacaoEntity movimentacao = new MovimentacaoEntity();
 
         movimentacao.setProduto(produto);
-
         movimentacao.setTipo(tipo);
-
         movimentacao.setQuantidade(quantidade);
-
+        movimentacao.setQuantidadeAnterior(quantidadeAnterior);
+        movimentacao.setQuantidadeAtual(quantidadeAtual);
         movimentacao.setUsuario(usuario);
-
-        // Data gerada automaticamente
-
         movimentacao.setData(LocalDateTime.now());
 
-
-        // Salva a movimentação no banco
-
         movimentacaoRepository.save(movimentacao);
+
+        // AULA 9: alerta de estoque mínimo
+        return gerarAlerta(produto);
+    }
+
+
+    // Gera a mensagem de alerta (ou null se o estoque está normal)
+    private String gerarAlerta(ProdutoEntity produto) {
+
+        if (produto.getQuantidade() == 0) {
+            return "ALERTA: o produto \"" + produto.getNome()
+                    + "\" está SEM ESTOQUE.";
+        }
+
+        if (produto.getQuantidade() <= produto.getEstoqueMinimo()) {
+            return "ALERTA: o produto \"" + produto.getNome()
+                    + "\" está com estoque baixo (atual: " + produto.getQuantidade()
+                    + ", mínimo: " + produto.getEstoqueMinimo() + ").";
+        }
+
+        return null;
     }
 }
